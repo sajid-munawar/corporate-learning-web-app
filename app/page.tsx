@@ -46,7 +46,7 @@ export default function LearningDashboard() {
             </li>
             <li>
               <a
-                href="#"
+                href="/leaderboard"
                 className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
               >
                 <svg
@@ -113,7 +113,7 @@ export default function LearningDashboard() {
               <Bell className="w-6 h-6" />
             </button>
             <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+              <AvatarImage src="https://i.pravatar.cc/40" alt="@shadcn" />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
           </div>
