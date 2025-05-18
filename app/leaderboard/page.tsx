@@ -1,7 +1,20 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Bell, GraduationCap, Star, Users } from "lucide-react";
+import Link from "next/link";
 
 export default function LearningLeaderboard() {
   // Mock data for the leaderboard
@@ -12,7 +25,7 @@ export default function LearningLeaderboard() {
       avatar: "https://i.pravatar.cc/40",
       department: "Investment Banking",
       points: 15420,
-      medal: "🥇"
+      medal: "🥇",
     },
     {
       rank: 2,
@@ -20,7 +33,7 @@ export default function LearningLeaderboard() {
       avatar: "https://i.pravatar.cc/40",
       department: "Risk Management",
       points: 14890,
-      medal: "🥈"
+      medal: "🥈",
     },
     {
       rank: 3,
@@ -28,7 +41,7 @@ export default function LearningLeaderboard() {
       avatar: "https://i.pravatar.cc/40",
       department: "Asset Management",
       points: 13750,
-      medal: "🥉"
+      medal: "🥉",
     },
     {
       rank: 4,
@@ -36,7 +49,7 @@ export default function LearningLeaderboard() {
       avatar: "https://i.pravatar.cc/40",
       department: "Securities",
       points: 12980,
-      medal: ""
+      medal: "",
     },
     {
       rank: 5,
@@ -44,35 +57,57 @@ export default function LearningLeaderboard() {
       avatar: "https://i.pravatar.cc/40",
       department: "Consumer Banking",
       points: 12450,
-      medal: ""
-    }
+      medal: "",
+    },
   ];
 
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <header className="flex justify-between items-center p-4 bg-slate-100 border-b">
-        <div className="flex items-center space-x-2 ml-12">
+        <div className="flex items-center space-x-2 lg:ml-12 relative">
           <div className="w-10 h-10 bg-blue-800 rounded flex items-center justify-center">
-            <span className="text-white text-xs font-medium">GS</span>
+            <Link href="/" className="text-white text-xs font-medium">
+              <span className="absolute inset-0 cursor-pointer"></span>GS
+            </Link>
           </div>
         </div>
         <div className="flex items-center space-x-4">
           <button className="p-2 text-gray-500 hover:text-blue-800">
             <Bell className="w-6 h-6" />
           </button>
-          <Avatar className="w-10 h-10 border-2 border-gray-300">
-            <AvatarImage src="https://i.pravatar.cc/40" alt="User avatar" />
-            <AvatarFallback>US</AvatarFallback>
-          </Avatar>
+           <Popover>
+              <PopoverTrigger>
+                <Avatar className="w-10 h-10 border-2 border-gray-300">
+                  <AvatarImage
+                    src="https://i.pravatar.cc/40"
+                    alt="User avatar"
+                  />
+                  <AvatarFallback>US</AvatarFallback>
+                </Avatar>
+              </PopoverTrigger>
+              <PopoverContent className="w-32 p-0 py-2 mt-3 relative">
+                <Link
+                  href="/login"
+                  className="underline text-blue-800"
+                >
+                  <span className="absolute inset-0 cursor-pointer"></span>
+                  Login
+                </Link>
+              </PopoverContent>
+            </Popover>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="container mx-auto py-8 px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-blue-900 mb-2">Learning Leaderboard</h1>
-          <p className="text-gray-600 text-lg">Top performers in corporate learning initiatives</p>
+          <h1 className="text-3xl font-bold text-blue-900 mb-2">
+            Learning Leaderboard
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Top performers in corporate learning initiatives
+          </p>
         </div>
 
         {/* Stats Cards */}
@@ -129,7 +164,9 @@ export default function LearningLeaderboard() {
                   <TableHead className="w-24 text-blue-800">Rank</TableHead>
                   <TableHead className="text-blue-800">Employee</TableHead>
                   <TableHead className="text-blue-800">Department</TableHead>
-                  <TableHead className="text-right text-blue-800">Points</TableHead>
+                  <TableHead className="text-right text-blue-800">
+                    Points
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -140,7 +177,9 @@ export default function LearningLeaderboard() {
                         {person.rank <= 3 ? (
                           <span className="text-xl mr-2">{person.medal}</span>
                         ) : (
-                          <span className="ml-2 text-gray-500">{person.rank}</span>
+                          <span className="ml-2 text-gray-500">
+                            {person.rank}
+                          </span>
                         )}
                       </div>
                     </TableCell>
@@ -148,13 +187,20 @@ export default function LearningLeaderboard() {
                       <div className="flex items-center">
                         <Avatar className="h-10 w-10 mr-3">
                           <AvatarImage src={person.avatar} alt={person.name} />
-                          <AvatarFallback>{person.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          <AvatarFallback>
+                            {person.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
                         </Avatar>
                         <span className="font-medium">{person.name}</span>
                       </div>
                     </TableCell>
                     <TableCell>{person.department}</TableCell>
-                    <TableCell className="text-right font-medium text-blue-800">{person.points.toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-medium text-blue-800">
+                      {person.points.toLocaleString()}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

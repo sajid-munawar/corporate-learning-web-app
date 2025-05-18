@@ -1,12 +1,13 @@
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Bell } from "lucide-react";
- 
+import Link from "next/link";
 
 export default function LearningDashboard() {
   return (
@@ -65,7 +66,7 @@ export default function LearningDashboard() {
             </li>
             <li>
               <a
-                href="#"
+                href="/trainings"
                 className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
               >
                 <svg
@@ -82,7 +83,7 @@ export default function LearningDashboard() {
             </li>
             <li>
               <a
-                href="#"
+                href="/quizzes"
                 className="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
               >
                 <svg
@@ -112,10 +113,26 @@ export default function LearningDashboard() {
             <button className="p-2 text-gray-500 hover:text-blue-800">
               <Bell className="w-6 h-6" />
             </button>
-            <Avatar>
-              <AvatarImage src="https://i.pravatar.cc/40" alt="@shadcn" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
+             <Popover>
+              <PopoverTrigger>
+                <Avatar className="w-10 h-10 border-2 border-gray-300">
+                  <AvatarImage
+                    src="https://i.pravatar.cc/40"
+                    alt="User avatar"
+                  />
+                  <AvatarFallback>US</AvatarFallback>
+                </Avatar>
+              </PopoverTrigger>
+              <PopoverContent className="w-32 p-0 py-2 mt-3 relative">
+                <Link
+                  href="/login"
+                  className="underline text-blue-800"
+                >
+                  <span className="absolute inset-0 cursor-pointer"></span>
+                  Login
+                </Link>
+              </PopoverContent>
+            </Popover>
           </div>
         </header>
 
