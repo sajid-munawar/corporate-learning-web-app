@@ -1,10 +1,5 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AuthHeader from "@/components/ui/AuthHeader";
 import { Badge } from "@/components/ui/badge";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Bell } from "lucide-react";
 import Link from "next/link";
@@ -77,26 +72,7 @@ export default function RequiredTrainings() {
               3
             </span>
           </div>
-            <Popover>
-              <PopoverTrigger>
-                <Avatar className="w-10 h-10 border-2 border-gray-300">
-                  <AvatarImage
-                    src="https://i.pravatar.cc/40"
-                    alt="User avatar"
-                  />
-                  <AvatarFallback>US</AvatarFallback>
-                </Avatar>
-              </PopoverTrigger>
-              <PopoverContent className="w-32 p-0 py-2 mt-3 relative">
-                <Link
-                  href="/login"
-                  className="underline text-blue-800"
-                >
-                  <span className="absolute inset-0 cursor-pointer"></span>
-                  Login
-                </Link>
-              </PopoverContent>
-            </Popover>
+            <AuthHeader />
         </div>
       </header>
 

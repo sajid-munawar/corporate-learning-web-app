@@ -1,10 +1,6 @@
+import AuthHeader from "@/components/ui/AuthHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Table,
   TableBody,
@@ -76,26 +72,7 @@ export default function LearningLeaderboard() {
           <button className="p-2 text-gray-500 hover:text-blue-800">
             <Bell className="w-6 h-6" />
           </button>
-           <Popover>
-              <PopoverTrigger>
-                <Avatar className="w-10 h-10 border-2 border-gray-300">
-                  <AvatarImage
-                    src="https://i.pravatar.cc/40"
-                    alt="User avatar"
-                  />
-                  <AvatarFallback>US</AvatarFallback>
-                </Avatar>
-              </PopoverTrigger>
-              <PopoverContent className="w-32 p-0 py-2 mt-3 relative">
-                <Link
-                  href="/login"
-                  className="underline text-blue-800"
-                >
-                  <span className="absolute inset-0 cursor-pointer"></span>
-                  Login
-                </Link>
-              </PopoverContent>
-            </Popover>
+           <AuthHeader />
         </div>
       </header>
 

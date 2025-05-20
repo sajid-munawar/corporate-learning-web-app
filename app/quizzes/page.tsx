@@ -1,14 +1,12 @@
 "use client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AuthHeader from "@/components/ui/AuthHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
+import { useEffect, useRef } from "react";
+
+import { fireSafetyQuiz } from "@/lib/data";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -21,7 +19,94 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function FireSafetyCertification() {
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [current, setCurrent] = useState(0);
+  const [elapsed, setElapsed] = useState(0); // in seconds
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [totalElapsed, setTotalElapsed] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+
+  const [answers, setAnswers] = useState<(number | null)[]>(
+    Array(fireSafetyQuiz.length).fill(null)
+  );
+
+  const question = fireSafetyQuiz[current];
+  const selectedOption = answers[current];
+
+  const updateStatsInLocalStorage = (newScore: number, newTime: number) => {
+    const stats = JSON.parse(localStorage.getItem("quizStats") || "{}");
+
+    const updatedStats = {
+      totalScore: (stats.totalScore || 0) + newScore,
+      totalTime: parseFloat(((stats.totalTime || 0) + newTime / 3600).toFixed(2)),
+      quizzesAttempted: (stats.quizzesAttempted || 0) + 1,
+    };
+
+    localStorage.setItem("quizStats", JSON.stringify(updatedStats));
+  };
+
+  const handleSelect = (index: number) => {
+    const updated = [...answers];
+    updated[current] = index;
+    setAnswers(updated);
+  };
+
+  const handleNext = () => {
+    if (current === fireSafetyQuiz.length - 1) {
+      setShowResults(true);
+      if (timerRef.current) clearInterval(timerRef.current);
+      const score = answers.filter(
+        (a, i) => a !== null && fireSafetyQuiz[i].options[a]?.correct
+      ).length;
+
+      // Save total elapsed including current question time
+      const totalTimeUsed = totalElapsed + elapsed;
+      updateStatsInLocalStorage(score, totalTimeUsed);
+
+      return;
+    }
+    if (selectedOption === null) return;
+    if (current < fireSafetyQuiz.length - 1) {
+      setCurrent((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (current > 0) {
+      setCurrent((prev) => prev - 1);
+    }
+  };
+
+  useEffect(() => {
+    setTotalElapsed((prev) => prev + elapsed); // Save current elapsed before switching
+    setElapsed(0);
+
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setElapsed((prev) => prev + 1);
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current]);
+
+  const formatTime = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60)
+      .toString()
+      .padStart(1, "0");
+    const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+    return `${minutes}:${seconds}`;
+  };
+
+  const progress = Math.round(((current + 1) / fireSafetyQuiz.length) * 100);
+  // const totalTimeFormatted = formatTime(totalElapsed + elapsed); // add current elapsed too
+  const score = answers.filter((selected, i) => {
+    const correctOptionIndex = fireSafetyQuiz[i].options.findIndex(
+      (opt) => opt.correct
+    );
+    return selected === correctOptionIndex;
+  }).length;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -37,26 +122,7 @@ export default function FireSafetyCertification() {
           </div>
           <div className="flex items-center space-x-4">
             <Bell className="w-6 h-6 text-blue-600" />
-            <Popover>
-              <PopoverTrigger>
-                <Avatar className="w-10 h-10 border-2 border-gray-300">
-                  <AvatarImage
-                    src="https://i.pravatar.cc/40"
-                    alt="User avatar"
-                  />
-                  <AvatarFallback>US</AvatarFallback>
-                </Avatar>
-              </PopoverTrigger>
-              <PopoverContent className="w-32 p-0 py-2 mt-3 relative">
-                <Link
-                  href="/login"
-                  className="underline text-blue-800"
-                >
-                  <span className="absolute inset-0 cursor-pointer"></span>
-                  Login
-                </Link>
-              </PopoverContent>
-            </Popover>
+            <AuthHeader />
           </div>
         </div>
       </header>
@@ -72,124 +138,147 @@ export default function FireSafetyCertification() {
 
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Question Area */}
-          <div className="lg:w-2/3">
-            <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-              <div className="flex items-center gap-2 text-blue-900 mb-6">
-                <Clock size={20} />
-                <span className="font-medium">1:09 elapsed</span>
-              </div>
 
-              <Alert className="mb-6 bg-red-50 border-red-200 text-red-600">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="text-red-600">
-                  You got this question wrong in your previous attempt
-                </AlertDescription>
-              </Alert>
+          {!showResults ? (
+            // 💡 Render quiz question here
+            <div className="lg:w-2/3">
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
+                <div className="flex items-center gap-2 text-blue-900 mb-6">
+                  <Clock size={20} />
+                  <span className="font-medium">
+                    Question {current + 1} of {fireSafetyQuiz.length}
+                  </span>
+                </div>
 
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold mb-4">
-                  What is the first action to take when discovering a fire?
-                </h3>
-
-                <div className="space-y-4">
-                  <div
-                    className={`border rounded-lg p-4 cursor-pointer hover:border-blue-900 transition-colors ${
-                      selectedOption === 1
-                        ? "border-blue-800 bg-blue-50"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => setSelectedOption(1)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-6 h-6 rounded-full border ${
-                          selectedOption === 1
-                            ? "border-blue-800"
-                            : "border-gray-400"
-                        } flex items-center justify-center`}
-                      >
-                        {selectedOption === 1 && (
-                          <div className="w-3 h-3 rounded-full bg-blue-800"></div>
-                        )}
-                      </div>
-                      <span>Sound the fire alarm</span>
-                    </div>
-                  </div>
-
-                  <div
-                    className={`border rounded-lg p-4 cursor-pointer hover:border-blue-900 transition-colors ${
-                      selectedOption === 2
-                        ? "border-blue-800 bg-blue-50"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => setSelectedOption(2)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-6 h-6 rounded-full border ${
-                          selectedOption === 2
-                            ? "border-blue-800"
-                            : "border-gray-400"
-                        } flex items-center justify-center`}
-                      >
-                        {selectedOption === 2 && (
-                          <div className="w-3 h-3 rounded-full bg-blue-800"></div>
-                        )}
-                      </div>
-                      <span>Call the fire department</span>
-                    </div>
-                  </div>
-
-                  <div
-                    className={`border rounded-lg p-4 cursor-pointer hover:border-blue-900 transition-colors ${
-                      selectedOption === 3
-                        ? "border-blue-800 bg-blue-50"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => setSelectedOption(3)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-6 h-6 rounded-full border ${
-                          selectedOption === 3
-                            ? "border-blue-800"
-                            : "border-gray-400"
-                        } flex items-center justify-center`}
-                      >
-                        {selectedOption === 3 && (
-                          <div className="w-3 h-3 rounded-full bg-blue-800"></div>
-                        )}
-                      </div>
-                      <span>Evacuate the building</span>
-                    </div>
+                <div className="w-full h-[70px] flex justify-between">
+                  {selectedOption === null ? (
+                    <Alert className="mb-6 w-8/12 bg-red-50 border-red-200 text-red-600">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription className="text-red-600">
+                        Please select an answer to continue.
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <div></div>
+                  )}
+                  <div className="flex items-center gap-2 text-blue-900 mb-6">
+                    <Clock size={20} />
+                    <span className="font-medium">
+                      {formatTime(elapsed)} elapsed
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex justify-between mt-8">
-                <Button
-                  variant="outline"
-                  className="flex text-blue-900 items-center gap-2"
-                >
-                  <ArrowLeft size={16} />
-                  Previous
-                </Button>
-                <Button className="bg-blue-800 hover:bg-blue-900 text-white flex items-center gap-2">
-                  Next
-                  <ChevronRight size={16} />
-                </Button>
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold mb-4">
+                    {question.question}
+                  </h3>
+
+                  <div className="space-y-4">
+                    {question.options.map((option, idx) => (
+                      <div
+                        key={idx}
+                        className={`border rounded-lg p-4 cursor-pointer hover:border-blue-900 transition-colors ${
+                          selectedOption === idx
+                            ? "border-blue-800 bg-blue-50"
+                            : "border-gray-200"
+                        }`}
+                        onClick={() => handleSelect(idx)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-6 h-6 rounded-full border ${
+                              selectedOption === idx
+                                ? "border-blue-800"
+                                : "border-gray-400"
+                            } flex items-center justify-center`}
+                          >
+                            {selectedOption === idx && (
+                              <div className="w-3 h-3 rounded-full bg-blue-800"></div>
+                            )}
+                          </div>
+                          <span>{option.text}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-between mt-8">
+                  <Button
+                    variant="outline"
+                    className="flex text-blue-900 items-center gap-2"
+                    onClick={handlePrevious}
+                    disabled={current === 0}
+                  >
+                    <ArrowLeft size={16} />
+                    Previous
+                  </Button>
+                  <Button
+                    className="bg-blue-800 hover:bg-blue-900 text-white flex items-center gap-2"
+                    onClick={handleNext}
+                    disabled={selectedOption === null}
+                  >
+                    {current === fireSafetyQuiz.length - 1 ? "Finish" : "Next"}
+                    <ChevronRight size={16} />
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            // 🎉 Show result summary
+            <div className="lg:w-2/3">
+              <Card className="bg-white shadow-sm border border-gray-100">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-4 text-blue-800">
+                    <Flame size={24} />
+                    <h2 className="text-xl font-bold">Your Quiz Summary</h2>
+                  </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-lg bg-blue-50 border border-blue-100">
+                      <h3 className="text-sm text-gray-600">Score</h3>
+                      <p className="text-2xl font-semibold text-blue-900">
+                        {score} / {fireSafetyQuiz.length}
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-green-50 border border-green-100">
+                      <h3 className="text-sm text-gray-600">Percentage</h3>
+                      <p className="text-2xl font-semibold text-green-700">
+                        {((score / fireSafetyQuiz.length) * 100).toFixed(0)}%
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-100">
+                      <h3 className="text-sm text-gray-600">Time Taken</h3>
+                      <p className="text-2xl font-semibold text-yellow-700">
+                        {formatTime(totalElapsed + elapsed)}
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-purple-50 border border-purple-100">
+                      <h3 className="text-sm text-gray-600">Correct Answers</h3>
+                      <p className="text-2xl font-semibold text-purple-800">
+                        {score} of {fireSafetyQuiz.length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
           {/* Sidebar */}
           <div className="lg:w-1/3">
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100 mb-6">
               <h3 className="font-semibold mb-4">Your Progress</h3>
-              <Progress value={60} className="h-2 mb-2" />
+              <Progress value={progress} className="h-2 mb-2" />
               <div className="flex justify-between text-sm text-gray-600">
-                <span>12 of 20 questions</span>
-                <span>60% complete</span>
+                <span>
+                  {answers.filter((a) => a !== null).length} of{" "}
+                  {fireSafetyQuiz.length} fireSafetyQuiz
+                </span>
+                <span>{progress}% complete</span>
               </div>
             </div>
 
@@ -200,7 +289,8 @@ export default function FireSafetyCertification() {
                   <h3 className="text-xl font-bold">Keep Going!</h3>
                 </div>
                 <p className="mb-4">
-                  You&apos;re making great progress. Just 8 more questions to
+                  You&apos;re making great progress. Just{" "}
+                  {fireSafetyQuiz.length - (current + 1)} more fireSafetyQuiz to
                   complete your certification!
                 </p>
                 <div className="flex items-center gap-2 text-sm">
